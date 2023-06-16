@@ -1,0 +1,2 @@
+## Disclaimer and Terms
+Please note that this software is unpolished pre-release material. It is provided on an "as-is" basis, and comes without guarantee of substantive support. It includes material that is proprietary and company confidential; please treat it with appropriate discretion. Until or unless determined otherwise, it is for use only by customers of Independent Robotics Inc. By downloading or using this software, you agree to the above terms.

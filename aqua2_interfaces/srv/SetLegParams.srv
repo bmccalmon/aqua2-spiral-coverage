@@ -1,0 +1,6 @@
+# © Copyright Independent Robotics Inc. 2022
+# Stores target amplitude and period for 1 robot motor
+
+float32 amplitude
+float32 period
+---
