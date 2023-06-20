@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'stabilize = movement.stabilize:main'
+            'swim_square = movement.swim_square:main'
         ],
     },
 )
