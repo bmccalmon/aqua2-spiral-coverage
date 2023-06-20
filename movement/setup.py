@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'stabalize = movement.stabalize:main'
+            'stabilize = movement.stabilize:main'
         ],
     },
 )

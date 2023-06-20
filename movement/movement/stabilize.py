@@ -1,4 +1,4 @@
-# Stabalizes Aqua2
+# Stabilizes Aqua2
 import time
 import math
 
@@ -9,6 +9,7 @@ from aqua2_interfaces.srv import GetString
 from aqua2_interfaces.srv import SetString
 from aqua2_interfaces.srv import SetInt
 from aqua2_interfaces.msg import Command
+from aqua2_interfaces.msg import AutopilotCommand
 from std_srvs.srv import Empty
 from geometry_msgs.msg import PoseWithCovarianceStamped
 
@@ -58,7 +59,7 @@ def checklist(node):
     def check_swim():
         time.sleep(0.5)
         client = node.create_client(GetString, "/aqua/system/get_mode")
-        request = GetStriing.Request()
+        request = GetString.Request()
         future = client.call_async(request)
         rclpy.spin_until_future_complete(node, future)
         result = future.result()
@@ -84,7 +85,7 @@ def checklist(node):
         4: depth and yaw
         """
         if mode != 0 and mode != 2 and mode != 4:
-            node.get_logger().info("Autopilot mode: " + str(mode) + " is not a valid mode. Try 0 (off), 2 (rpy), or 4 (depth/yaw)")
+            node.get_logger().info("Autopilot mode " + str(mode) + " is not a valid mode. Try 0 (off), 2 (rpy), or 4 (depth/yaw)")
             return
         client = node.create_client(SetInt, "/aqua/autopilot/set_autopilot_mode")
         request = SetInt.Request()
@@ -103,7 +104,7 @@ def checklist(node):
             timer = timer + 0.1
             v_timer = v_timer + 0.1
             if timer > 10.0:
-                node.get_logger().info("Taking longer than usual... Please check robot.")
+                node.get_logger().warning("Taking longer than usual... Please check robot.")
                 timer = 0
                 calibrate()
         node.get_logger().info("Calibration completed in " + str(v_timer) + " seconds.")
@@ -115,59 +116,50 @@ def checklist(node):
             continue
 
     if check_autopilot() == 0:
-        set_autopilot(4)
-        node.get_logger().info("Setting to autopilot mode 4")
+        set_autopilot(2)
+        node.get_logger().info("Setting to autopilot mode 2")
 
-def stabalize(node):
-    
+def stabilize(node):
+    quit = False
+
     def callback(msg):
-        nonlocal publisher
-        # get quaternion orientation
+        nonlocal quit
+
         orientation = msg.pose.pose.orientation
-        # convert from quaternion to euler
         roll, pitch, yaw = euler_from_quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
-        node.get_logger().info("Roll: " + str(roll) + " | Pitch: " + str(pitch))
+        zone = 0.00872665 # radians
+        roll_ideal = (roll < zone and roll > (zone * -1))
+        pitch_ideal = (pitch < zone and pitch > (zone * -1))
+        if roll_ideal and pitch_ideal:
+            quit = True
 
-        # using proportional control, adjust the orientation to get angles roll=0, pitch=0
-        # roll
-        error_value_roll = roll
-        adjust_value_roll = (error_value_roll * -1) * 0.1
-        # pitch
-        error_value_pitch = pitch
-        adjust_value_pitch = (error_value_pitch * 1) * 0.1
-
-        msg = Command()
-        deadzone = 0.0523599
-        roll_ideal = (roll < deadzone and roll > (deadzone * -1))
-        pitch_ideal = (pitch < deadzone and pitch > (deadzone * -1))
-        if not(roll_ideal):
-            msg.roll = adjust_value_roll
-            node.get_logger().info("Adjusting Roll: " + str(msg.roll))
-        elif not(pitch_ideal):
-            msg.pitch = adjust_value_pitch
-            node.get_logger().info("Adjusting Pitch: " + str(msg.pitch))
+        publisher = node.create_publisher(AutopilotCommand, "/aqua/autopilot/command", 10)
+        msg = AutopilotCommand()
+        msg.target_roll = 0.0
+        msg.target_pitch = 0.0
         publisher.publish(msg)
 
-    publisher = node.create_publisher(Command, "/aqua/command", 10)
     subscriber = node.create_subscription(PoseWithCovarianceStamped, "/aqua/dvl_pose_estimate", callback, 10)
 
-    rclpy.spin(node)
+    while not quit:
+        rclpy.spin_once(node)
 
 def main():
     rclpy.init()
-    node = rclpy.create_node("stabalize")
+    node = rclpy.create_node("stabilize")
     
     # startup Aqua2
     node.get_logger().info("STARTING CHECKLIST")
     checklist(node)
     
     # stabalize Aqua2
-    #node.get_logger().info("STARTING STABALIZATION")
+    node.get_logger().info("STARTING INITIAL STABILIZATION")
     #stabalize(node)
+    stabilize(node)
 
     node.destroy_node()
     rclpy.shutdown()
-    node.get_logger().info("Successfully shutdown")
+    node.get_logger().info("Successfully stabilized")
 
 if __name__ == "__main__":
     main()
