@@ -1,3 +1,5 @@
+
+# Useful functions that can be used related to geometry
 import math
 
 # given x, y, z, and w values from a quaternion, convert to euler angles

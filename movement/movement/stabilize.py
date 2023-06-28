@@ -132,7 +132,6 @@ def main():
     
     # stabalize Aqua2
     node.get_logger().info("STARTING INITIAL STABILIZATION")
-    #stabalize(node)
     stabilize(node)
 
     node.destroy_node()
