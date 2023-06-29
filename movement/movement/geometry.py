@@ -34,4 +34,6 @@ def get_target_angle(c, a):
     sum = c + a
     if sum >= 180:
         sum = sum - 360
+    elif sum <= -180:
+        sum = sum + 360
     return sum

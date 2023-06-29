@@ -59,7 +59,6 @@ def main():
         nonlocal bridge
         cv_image = bridge.compressed_imgmsg_to_cv2(msg, desired_encoding="passthrough")
         x_deviation, y_deviation = find_deviation(cv_image)
-        node.get_logger().info("Deviation x: " + str(x_deviation) + ", y: " + str(y_deviation))
         publisher = node.create_publisher(Deviation, "boundary_info", 10)
         msg = Deviation()
         msg.x = x_deviation
