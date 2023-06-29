@@ -10,6 +10,12 @@ from movement_interfaces.msg import Deviation
 
 # Given a cv2 image, return the x,y deviation of the boundary line's centroid from the center of the image
 def find_deviation(img):
+    # take the top half of the image
+    h, w = img.shape[:2]
+    ts = 0
+    te = h // 2
+    img = img[ts:te, :]
+    
     t_lower = 150
     t_upper = 200
 

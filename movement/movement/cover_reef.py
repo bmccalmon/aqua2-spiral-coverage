@@ -14,8 +14,8 @@ def checklist(node):
     stabilize.set_autopilot(node, 2)
 
 def follow_boundary(node):
-    x_deviation = 0.1
-    y_deviation = 0.1
+    x_deviation = 0.0
+    y_deviation = 0.0
 
     publisher = node.create_publisher(AutopilotCommand, "/aqua/autopilot/command", 10)
     auto_msg = AutopilotCommand()
@@ -29,25 +29,36 @@ def follow_boundary(node):
     def main_callback(msg):
         nonlocal publisher
         nonlocal auto_msg
+        nonlocal x_deviation
+        nonlocal y_deviation
         orientation = msg.pose.pose.orientation
         roll, pitch, yaw = geometry.euler_from_quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
-        yaw = geometry.degrees_from_radians(yaw)
-        add_yaw = (x_deviation * 1) + (y_deviation * -10)
-        max_turn_degree = 10.0
-        if add_yaw > max_turn_degree:
-            add_yaw = max_turn_degree
-        elif add_yaw < -1 * max_turn_degree:
-            add_yaw = -1 * max_turn_degree
-        target_yaw = geometry.get_target_angle(yaw, add_yaw)
-        auto_msg.target_yaw = target_yaw
+        current_yaw = geometry.degrees_from_radians(yaw)
+
+        # calculate yaw
+        k = 0.001
+        yaw = (k) * (x_deviation ** 3)
+        if yaw >= 45:
+            yaw = 45
+        elif yaw <= -45:
+            yaw = -45
+        new_yaw = geometry.get_target_angle(current_yaw, yaw)
+
+        # calculate surge
+        max_surge = 0.3
+        k = 0.0008
+        b = 0.0008
+        surge = (max_surge) - (k * (x_deviation ** 2))
+                #+ b * (y_deviation ** 2))
+        if surge < 0.0:
+            surge = 0.0
+
+        # plug into command
+        auto_msg.target_yaw = new_yaw
         auto_msg.target_pitch = -0.3
-        auto_msg.target_roll = 0.0
-        surge = 1/abs(x_deviation*50)
-        if surge > 0.05:
-            surge = 0.05
         auto_msg.surge = surge
-        print("Current surge: " + str(surge))
-        print("Deviation x: " + str(x_deviation) + ", y: " + str(y_deviation))
+
+        print("Surge: " + str(surge) + " x deviation: " + str(x_deviation) + " y deviation: " + str(y_deviation) + " Yaw: " + str(yaw))
         publisher.publish(auto_msg)
 
     subscriber_deviation = node.create_subscription(Deviation, "boundary_info", deviation_callback, 10)
