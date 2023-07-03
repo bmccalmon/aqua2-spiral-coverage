@@ -53,6 +53,7 @@ def find_deviation(img, show_pictures):
     
     t_lower = 100
     t_upper = 150
+    # 100, 150 - works but get distracted by the fish
 
     edge = cv2.Canny(img, t_lower, t_upper)
 

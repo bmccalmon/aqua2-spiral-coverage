@@ -10,8 +10,7 @@ from aqua2_interfaces.msg import AutopilotCommand
 from geometry_msgs.msg import PoseWithCovarianceStamped
 
 def checklist(node):
-    node.get_logger().info("Setting to autopilot mode 2")
-    stabilize.set_autopilot(node, 2)
+    stabilize.checklist(node)
 
 def follow_boundary(node):
     x_deviation = 0.0

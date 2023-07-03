@@ -16,23 +16,23 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 
 # sets Aqua2's autopilot mode
 def set_autopilot(node, mode):
-	"""
-	0: off
-	2: rpy
-	4: depth and yaw
-	"""
-	if mode != 0 and mode != 2 and mode != 4:
-	    node.get_logger().warning("Autopilot mode " + str(mode) + " is not a valid mode. Try 0 (off), 2 (rpy), or 4 (depth/yaw)")
-	    return
-	client = node.create_client(SetInt, "/aqua/autopilot/set_autopilot_mode")
-	request = SetInt.Request()
-	request.value = mode
-	future = client.call_async(request)
-	rclpy.spin_until_future_complete(node, future)
+    """
+    0: off
+    2: rpy
+    4: depth and yaw
+    """
+    if mode != 0 and mode !=2 and mode != 4:
+        node.get_logger().warning("Autopilot mode " + str(mode) + " is not a valid mode. Try 0 (off), 2 (rpy), or 4 (depth/yaw)")
+        return
+    node.get_logger().info("Setting to Autopilot mode " + str(mode) + "...")
+    client = node.create_client(SetInt, "/aqua/autopilot/set_autopilot_mode")
+    request = SetInt.Request()
+    request.value = mode
+    future = client.call_async(request)
+    rclpy.spin_until_future_complete(node, future)
 
-# checklist to ensure all systems are running properly
-def checklist(node):
- 
+# Checks if already calibrated and, if not, calibrate
+def calibrate(node):
     # check if Aqua2 is calibrated
     def check_calibration():
         client = node.create_client(GetBool, "/aqua/system/is_calibrated")
@@ -43,38 +43,16 @@ def checklist(node):
         return result.value
 
     # calibrate Aqua2
-    def calibrate():
+    def self_calibrate():
         client = node.create_client(Empty, "/aqua/system/calibrate")
         request = Empty.Request()
         future = client.call_async(request)
         rclpy.spin_until_future_complete(node, future)
 
-    # check if Aqua2 is in swim mode
-    def check_swim():
-        time.sleep(0.5)
-        client = node.create_client(GetString, "/aqua/system/get_mode")
-        request = GetString.Request()
-        future = client.call_async(request)
-        rclpy.spin_until_future_complete(node, future)
-        result = future.result()
-        return result.value
-
-    # set to swim mode
-    def set_swim():
-        client = node.create_client(SetString, "/aqua/system/set_mode")
-        request = SetString.Request()
-        request.value = "swimmode"
-        future = client.call_async(request)
-        rclpy.spin_until_future_complete(node, future)
-    
-    # checks and returns what mode Aqua2 is in
-    def check_autopilot():
-        return 0
-
     # runs checks
     if check_calibration() == False:
         timer = v_timer = 0.0
-        calibrate()
+        self_calibrate()
         node.get_logger().info("Calibrating...")
         while check_calibration() == False:
             time.sleep(0.1)
@@ -86,15 +64,37 @@ def checklist(node):
                 calibrate()
         node.get_logger().info("Calibration completed in " + str(v_timer) + " seconds.")
 
+# Checks if already in swim mode and, if not, set to swim mode
+def set_swim(node):
+    # check if Aqua2 is in swim mode
+    def check_swim():
+        time.sleep(0.5)
+        client = node.create_client(GetString, "/aqua/system/get_mode")
+        request = GetString.Request()
+        future = client.call_async(request)
+        rclpy.spin_until_future_complete(node, future)
+        result = future.result()
+        return result.value
+
+    # set to swim mode
+    def self_set_swim():
+        client = node.create_client(SetString, "/aqua/system/set_mode")
+        request = SetString.Request()
+        request.value = "swimmode"
+        future = client.call_async(request)
+        rclpy.spin_until_future_complete(node, future)
+
     if check_swim() != "swimmode":
-        set_swim()
+        self_set_swim()
         node.get_logger().info("Setting to swim mode...")
         while check_swim() == False:
             continue
 
-    if check_autopilot() == 0:
-        set_autopilot(node, 2)
-        node.get_logger().info("Setting to autopilot mode 2")
+# checklist to ensure all systems are running properly
+def checklist(node):
+    calibrate(node)
+    set_swim(node)
+    set_autopilot(node, 2)
 
 def stabilize(node):
     quit = False

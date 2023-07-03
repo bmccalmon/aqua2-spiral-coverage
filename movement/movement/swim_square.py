@@ -11,7 +11,6 @@ from aqua2_interfaces.msg import AutopilotCommand
 from geometry_msgs.msg import PoseWithCovarianceStamped
 
 def checklist(node):
-    node.get_logger().info("Setting to autopilot mode 2")
     stabilize.set_autopilot(node, 2)
 
 def swim_square(node, edge_length, depth):
@@ -30,7 +29,6 @@ def swim_square(node, edge_length, depth):
 
         if should_turn == False:
             # if needing to go straight
-            node.get_logger().info("Going straight...")
             msg.surge = 1.0
             msg.target_pitch = -0.3
             msg.target_yaw = target_yaw
@@ -42,9 +40,9 @@ def swim_square(node, edge_length, depth):
             if edge_timer > edge_length:
                 edge_timer = 0
                 should_turn = True
+                node.get_logger().info("Turning...")
         else:
             # if went straight for enough time and needing to turn
-            node.get_logger().info("Turning...")
             yaw_degrees = geometry.degrees_from_radians(yaw)
             
             if new_target_yaw:
@@ -63,6 +61,7 @@ def swim_square(node, edge_length, depth):
 
             if yaw_ideal:
                 should_turn = False
+                node.get_logger().info("Going straight...")
                 new_target_yaw = True
 
     subscriber = node.create_subscription(PoseWithCovarianceStamped, "/aqua/dvl_pose_estimate", callback, 10)
