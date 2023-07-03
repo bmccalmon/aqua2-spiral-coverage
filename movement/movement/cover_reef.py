@@ -46,7 +46,7 @@ def follow_boundary(node):
 
         # calculate surge
         max_surge = 0.3
-        k = 0.0008
+        k = 0.0001
         b = 0.0008
         surge = (max_surge) - (k * (x_deviation ** 2))
                 #+ b * (y_deviation ** 2))
@@ -58,7 +58,8 @@ def follow_boundary(node):
         auto_msg.target_pitch = -0.3
         auto_msg.surge = surge
 
-        print("Surge: " + str(surge) + " x deviation: " + str(x_deviation) + " y deviation: " + str(y_deviation) + " Yaw: " + str(yaw))
+        #print("Surge: " + str(surge) + " x deviation: " + str(x_deviation) + " y deviation: " + str(y_deviation) + " Yaw: " + str(yaw))
+        print(f"Surge: {surge: <25} x deviation: {x_deviation: <25} y deviation: {y_deviation: <25} Yaw: {yaw}")
         publisher.publish(auto_msg)
 
     subscriber_deviation = node.create_subscription(Deviation, "boundary_info", deviation_callback, 10)
