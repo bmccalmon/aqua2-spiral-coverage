@@ -12,14 +12,13 @@ from movement_interfaces.msg import Deviation
 # Given a contour, return its x,y centroid
 def find_centroid(contour):
     # contour[pixel][0][x/y]
-    sum_x = 0
-    sum_y = 0
+    sum_x = sum_y = 0
     layer_size = len(contour)
     i = 0
     while i < layer_size:
         sum_x = sum_x + contour[i][0][0]
         sum_y = sum_y + contour[i][0][1]
-        i = i + 1
+        i += 1
     centroid_x = sum_x / layer_size
     centroid_y = sum_y / layer_size
     return centroid_x, centroid_y
@@ -32,7 +31,7 @@ def best_contour(contours):
     while i < len(contours):
         if len(contours[i]) > 100:
             largest_contours.append(contours[i])
-        i = i + 1
+        i += 1
     # find the contour with the least x centroid
     best_contour = largest_contours[0]
     i = 0
@@ -40,7 +39,7 @@ def best_contour(contours):
         i_centroid = find_centroid(largest_contours[i])[0]
         if i_centroid < find_centroid(best_contour)[0] and i_centroid > 70:
             best_contour = largest_contours[i]
-        i = i + 1
+        i += 1
     #print(str(find_centroid(best_contour)[0]))
     return best_contour
 
@@ -70,7 +69,7 @@ def find_deviation(img, show_pictures):
         i = 0
         while i < len(contour):
             manual_canvas[contour[i][0][1]][contour[i][0][0]] = (255, 255, 255)
-            i = i + 1
+            i += 1
         manual_canvas[int(centroid_y)][int(centroid_x)] = (0, 0, 255)
 
     # get center of image

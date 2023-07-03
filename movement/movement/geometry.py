@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 # Useful functions that can be used related to geometry
 import math
 

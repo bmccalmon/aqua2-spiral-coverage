@@ -21,16 +21,12 @@ def follow_boundary(node):
     auto_msg = AutopilotCommand()
 
     def deviation_callback(msg):
-        nonlocal x_deviation
-        nonlocal y_deviation
+        nonlocal x_deviation, y_deviation
         x_deviation = msg.x
         y_deviation = msg.y
 
     def main_callback(msg):
-        nonlocal publisher
-        nonlocal auto_msg
-        nonlocal x_deviation
-        nonlocal y_deviation
+        nonlocal publisher, auto_msg, x_deviation, y_deviation
         orientation = msg.pose.pose.orientation
         roll, pitch, yaw = geometry.euler_from_quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
         current_yaw = geometry.degrees_from_radians(yaw)
@@ -47,18 +43,16 @@ def follow_boundary(node):
         # calculate surge
         max_surge = 0.3
         k = 0.0001
-        b = 0.0008
+        #k = 0.0008
         surge = (max_surge) - (k * (x_deviation ** 2))
-                #+ b * (y_deviation ** 2))
         if surge < 0.0:
             surge = 0.0
 
         # plug into command
         auto_msg.target_yaw = new_yaw
-        auto_msg.target_pitch = -0.3
+        auto_msg.target_pitch = -0.2
         auto_msg.surge = surge
 
-        #print("Surge: " + str(surge) + " x deviation: " + str(x_deviation) + " y deviation: " + str(y_deviation) + " Yaw: " + str(yaw))
         print(f"Surge: {surge: <25} x deviation: {x_deviation: <25} y deviation: {y_deviation: <25} Yaw: {yaw}")
         publisher.publish(auto_msg)
 

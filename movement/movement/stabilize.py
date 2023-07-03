@@ -73,8 +73,7 @@ def checklist(node):
 
     # runs checks
     if check_calibration() == False:
-        timer = 0.0
-        v_timer = 0.0
+        timer = v_timer = 0.0
         calibrate()
         node.get_logger().info("Calibrating...")
         while check_calibration() == False:

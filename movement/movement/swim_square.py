@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Make the robot swim in a square
+# Makes the robot swim in a square
+# Demonstrates Aqua2's Autopilot features
 import stabilize
 import geometry
 
@@ -14,18 +15,12 @@ def checklist(node):
     stabilize.set_autopilot(node, 2)
 
 def swim_square(node, edge_length, depth):
-    should_quit = False
-    should_turn = False
+    should_quit = should_turn = False
     new_target_yaw = True
-    target_yaw = 0.0
-    edge_timer = 0.0
+    target_yaw = edge_timer = 0.0
 
     def callback(msg):
-        nonlocal should_quit
-        nonlocal should_turn
-        nonlocal new_target_yaw
-        nonlocal target_yaw
-        nonlocal edge_timer
+        nonlocal should_quit, should_turn, new_target_yaw, target_yaw, edge_timer
 
         orientation = msg.pose.pose.orientation
         roll, pitch, yaw = geometry.euler_from_quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
@@ -38,8 +33,6 @@ def swim_square(node, edge_length, depth):
             node.get_logger().info("Going straight...")
             msg.surge = 1.0
             msg.target_pitch = -0.3
-            msg.target_roll = 0.0
-            #msg.target_depth = depth
             msg.target_yaw = target_yaw
             publisher.publish(msg)
 
@@ -61,7 +54,6 @@ def swim_square(node, edge_length, depth):
             msg.target_yaw = target_yaw
             msg.target_pitch = -0.3
             msg.target_roll = 0.0
-            #msg.target_depth = depth
             publisher.publish(msg)
 
             time.sleep(0.1)
