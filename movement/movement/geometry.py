@@ -37,3 +37,10 @@ def get_target_angle(c, a):
     elif sum <= -180:
         sum = sum + 360
     return sum
+
+# Given a current and target position, return the angle needed to face it
+def find_angle_to_face(c, t):
+    dx = t[0] - c[0]
+    dy = t[1] - c[1]
+    angle = math.atan2(dy, dx)
+    return degrees_from_radians(angle)
