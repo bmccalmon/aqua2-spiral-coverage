@@ -3,47 +3,48 @@
 import math
 from collections import deque
 
-# Given a deque of vertices and a scale, return a new deque with a decreased radius
-# Example usage: shrink_polygon(boundary_points, 0.9)
-def shrink_polygon(vertices, scale):
+# Given a deque of points, return its centroid
+def find_centroid(points):
+    sum_x = sum_y = 0
+    for point in points:
+        sum_x += point[0]
+        sum_y += point[1]
+    return [sum_x / len(points), sum_y / len(points)]
+
+# Given two points, return the distance between them
+def find_distance(a, b):
+    return math.sqrt(((a[0] - b[0]) ** 2) + ((a[1] - b[1]) ** 2))
+
+# Given a deque of vertices and a distance, return a new deque with a decreased radius
+# Example usage: shrink_polygon(boundary_points, 5)
+def shrink_polygon(vertices, distance):
     # Deep copy deque vertices
     vertices_copy = deque()
-    i = 0
-    while i < len(vertices):
-        vertices_copy.append([vertices[i][0], vertices[i][1]])
-        i += 1 
+    for point in vertices:
+        vertices_copy.append([point[0], point[1]])
     # Calculate the centroid of the polygon
-    sum_x = sum_y = 0
-    i = 0
-    while i < len(vertices_copy):
-        sum_x += vertices_copy[i][0]
-        sum_y += vertices_copy[i][1]
-        i += 1
-    centroid_x = sum_x / len(vertices_copy)
-    centroid_y = sum_y / len(vertices_copy)
-    centroid = [centroid_x, centroid_y]
+    centroid = find_centroid(vertices_copy)
     # Shift every point by the centroid, scale, then shift back
-    i = 0
-    while i < len(vertices_copy):
+    for point in vertices_copy:
+        # Calculate the approximate radius at the current point and, using that, estimate the scale factor needed to satisfy the wanted distance
+        radius = find_distance(centroid, point)
+        scale = 1 - (distance / radius)
         # Shift by centroid
-        vertices_copy[i][0] -= centroid_x
-        vertices_copy[i][1] -= centroid_y
+        point[0] -= centroid[0]
+        point[1] -= centroid[1]
         # Scale
-        vertices_copy[i][0] *= scale
-        vertices_copy[i][1] *= scale
+        point[0] *= scale
+        point[1] *= scale
         # Shift back
-        vertices_copy[i][0] += centroid_x
-        vertices_copy[i][1] += centroid_y
-        i += 1
+        point[0] += centroid[0]
+        point[1] += centroid[1]
     return vertices_copy
 
 # Given a polygon, return a deque of smaller polygons that ensures complete coverage of the original polygon
-def get_rings(polygon):
+def get_rings(polygon, fov, height):
     rings = deque()
-    # TODO: Based on the boundary, determine how many rings to generate and the space in between each
     rings.append(polygon)
-    rings.append(shrink_polygon(polygon, 0.666))
-    rings.append(shrink_polygon(polygon, 0.333))
+    distance = 3
     return rings
 
 # given x, y, z, and w values from a quaternion, convert to euler angles
