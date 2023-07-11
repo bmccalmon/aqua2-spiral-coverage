@@ -2,16 +2,20 @@
 # Stage 1: Circle the reef and record coordinates
 import stabilize
 import geometry
+import swim_to
+import visualize
 
 import rclpy
 from movement_interfaces.msg import Deviation
 from aqua2_interfaces.msg import AutopilotCommand
 from geometry_msgs.msg import PoseWithCovarianceStamped
+from nav_msgs.msg import Odometry
 
 from collections import deque
 import math
 import matplotlib.pyplot as plt
 import time
+import pickle
 
 def checklist(node):
     stabilize.checklist(node)
@@ -24,34 +28,12 @@ def follow_boundary(node):
     publisher = node.create_publisher(AutopilotCommand, "/aqua/autopilot/command", 10)
     auto_msg = AutopilotCommand()
 
-    # For debug
-    def plot_points(points):
-        # Extract x and y coordinates from the points list
-        x_coords = [point[0] for point in points]
-        y_coords = [point[1] for point in points]
-
-        # Create a scatter plot
-        plt.scatter(x_coords, y_coords)
-
-        # Set the aspect ratio
-        plt.xlim(-25, 35)
-        plt.ylim(-25, 35)
-
-        # Add labels and title
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.title('Reef Boundary')
-
-        # Display the plot
-        plt.show()
-        while True:
-            pass
-
     halfway = False
+    lap_complete = False
     def store_points():
-        nonlocal boundary_points, x_pos, y_pos, halfway
-        print(f"x: {x_pos: <25} y: {y_pos: <25}")
-        print(boundary_points)
+        nonlocal boundary_points, x_pos, y_pos, halfway, lap_complete
+        #print(f"x: {x_pos: <25} y: {y_pos: <25}")
+        #print(boundary_points)
         point = [round(x_pos, 2), round(y_pos, 2)]
         # append coordinate point to the deque
         if len(boundary_points) == 0:
@@ -62,11 +44,11 @@ def follow_boundary(node):
             boundary_points.append(point)
         if halfway == False and boundary_points[-1][0] < boundary_points[0][0]:
             halfway = True
-        if halfway == True and boundary_points[-1][0] > boundary_points[0][0]:
+        if halfway == True and x_pos > boundary_points[0][0]:
             # circle complete
-            plot_points(boundary_points)
-        print(f"Comparing {boundary_points[-1]} to {point}")
-        print(f"Number of points: {len(boundary_points)}")
+            lap_complete = True
+        #print(f"Comparing {boundary_points[-1]} to {point}")
+        #print(f"Number of points: {len(boundary_points)}")
 
     def deviation_callback(msg):
         nonlocal x_deviation, y_deviation
@@ -112,19 +94,51 @@ def follow_boundary(node):
         publisher.publish(auto_msg)
 
     subscriber_deviation = node.create_subscription(Deviation, "boundary_info", deviation_callback, 10)
-    subscriber_pose = node.create_subscription(PoseWithCovarianceStamped, "/aqua/dvl_pose_estimate", main_callback, 10)
+    subscriber_pose = node.create_subscription(Odometry, "/aqua/simulator/pose", main_callback, 10)
+    #subscriber_pose = node.create_subscription(PoseWithCovarianceStamped, "/aqua/dvl_pose_estimate", main_callback, 10)
 
-    rclpy.spin(node)
+    while not lap_complete:
+        rclpy.spin_once(node)
+
+    with open("sim_map.pickle", "wb") as file:
+        pickle.dump(boundary_points, file)
+
+    return boundary_points
+
+def spiral_inside(node):
+    with open("sim_map.pickle", "rb") as file:
+        boundary = pickle.load(file)
+    # Generate a list of rings to follow
+    rings = geometry.get_rings(boundary)
+    visualize.plot_points(rings)
+    node = node
+    while len(rings) > 0:
+        while len(rings[0]) > 0:
+            target = rings[0].popleft()
+            swim_to.go_to_pos(node, target[0], target[1])
+            node.destroy_node()
+            node = rclpy.create_node("cover_reef")
+        print(f"Finished ring")
+        rings.popleft()
+    print("Finished spiraling")
 
 def main():
     rclpy.init()
     node = rclpy.create_node("cover_reef")
 
-    node.get_logger().info("STARTING CHECKLIST")
+    node.get_logger().info("Starting checklist...")
     checklist(node)
 
     node.get_logger().info("Following boundary...")
-    follow_boundary(node)
+    #boundary_points = follow_boundary(node)
+
+    # Restart node
+    node.destroy_node()
+    node = rclpy.create_node("cover_reef")
+
+    node.get_logger().info("Spiraling inside...")
+    #spiral_inside(node, boundary_points)
+    spiral_inside(node)
 
     node.destroy_node()
     rclpy.shutdown()

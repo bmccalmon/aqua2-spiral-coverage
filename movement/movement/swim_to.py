@@ -5,6 +5,7 @@ import rclpy
 
 from aqua2_interfaces.msg import AutopilotCommand
 from geometry_msgs.msg import PoseWithCovarianceStamped
+from nav_msgs.msg import Odometry
 
 # Swim to the given x,y coordinate
 def go_to_pos(node, x, y):
@@ -28,7 +29,7 @@ def go_to_pos(node, x, y):
         auto_msg.surge = 0.3
         auto_msg.target_pitch = -0.3
 
-        print(f"Current position: ({round(position.x,2): <10}, {round(position.y,2): <10}) Wanted position: ({x}, {y}) Needed angle: {target_angle: <20} degrees")
+        #print(f"Current position: ({round(position.x,2): <10}, {round(position.y,2): <10}) Wanted position: ({x}, {y}) Needed angle: {target_angle: <20} degrees")
         
         buffer = 1.0
         x_ideal = (position.x < (x + buffer) and position.x > (x - buffer))
@@ -38,7 +39,8 @@ def go_to_pos(node, x, y):
 
         publisher.publish(auto_msg)
 
-    subscriber = node.create_subscription(PoseWithCovarianceStamped, "/aqua/dvl_pose_estimate", callback, 10)
+    subscriber = node.create_subscription(Odometry, "/aqua/simulator/pose", callback, 10)
+    #subscriber = node.create_subscription(PoseWithCovarianceStamped, "/aqua/dvl_pose_estimate", callback, 10)
 
     while not should_quit:
         rclpy.spin_once(node)

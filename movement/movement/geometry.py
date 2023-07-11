@@ -1,6 +1,50 @@
 #!/usr/bin/env python3
-# Useful functions that can be used related to geometry
+# Useful functions related to geometry that can be used
 import math
+from collections import deque
+
+# Given a deque of vertices and a scale, return a new deque with a decreased radius
+# Example usage: shrink_polygon(boundary_points, 0.9)
+def shrink_polygon(vertices, scale):
+    # Deep copy deque vertices
+    vertices_copy = deque()
+    i = 0
+    while i < len(vertices):
+        vertices_copy.append([vertices[i][0], vertices[i][1]])
+        i += 1 
+    # Calculate the centroid of the polygon
+    sum_x = sum_y = 0
+    i = 0
+    while i < len(vertices_copy):
+        sum_x += vertices_copy[i][0]
+        sum_y += vertices_copy[i][1]
+        i += 1
+    centroid_x = sum_x / len(vertices_copy)
+    centroid_y = sum_y / len(vertices_copy)
+    centroid = [centroid_x, centroid_y]
+    # Shift every point by the centroid, scale, then shift back
+    i = 0
+    while i < len(vertices_copy):
+        # Shift by centroid
+        vertices_copy[i][0] -= centroid_x
+        vertices_copy[i][1] -= centroid_y
+        # Scale
+        vertices_copy[i][0] *= scale
+        vertices_copy[i][1] *= scale
+        # Shift back
+        vertices_copy[i][0] += centroid_x
+        vertices_copy[i][1] += centroid_y
+        i += 1
+    return vertices_copy
+
+# Given a polygon, return a deque of smaller polygons that ensures complete coverage of the original polygon
+def get_rings(polygon):
+    rings = deque()
+    # TODO: Based on the boundary, determine how many rings to generate and the space in between each
+    rings.append(polygon)
+    rings.append(shrink_polygon(polygon, 0.666))
+    rings.append(shrink_polygon(polygon, 0.333))
+    return rings
 
 # given x, y, z, and w values from a quaternion, convert to euler angles
 def euler_from_quaternion(x, y, z, w):
