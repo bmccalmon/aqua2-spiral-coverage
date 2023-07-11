@@ -28,7 +28,11 @@ def shrink_polygon(vertices, distance):
     for point in vertices_copy:
         # Calculate the approximate radius at the current point and, using that, estimate the scale factor needed to satisfy the wanted distance
         radius = find_distance(centroid, point)
+        if radius == 0:
+            radius = 0.001
         scale = 1 - (distance / radius)
+        if scale < 0:
+            scale = 0
         # Shift by centroid
         point[0] -= centroid[0]
         point[1] -= centroid[1]
@@ -40,11 +44,26 @@ def shrink_polygon(vertices, distance):
         point[1] += centroid[1]
     return vertices_copy
 
+# Given a deque of points representing a polygon, find the point that is closest to the polygon's centroid
+def furthest_from_centroid(polygon):
+    centroid = find_centroid(polygon)
+    furthest_point = polygon[0]
+    for point in polygon:
+        if find_distance(point, centroid) > find_distance(furthest_point, centroid):
+            furthest_point = point
+    return furthest_point
+
 # Given a polygon, return a deque of smaller polygons that ensures complete coverage of the original polygon
 def get_rings(polygon, fov, height):
     rings = deque()
     rings.append(polygon)
-    distance = 3
+    distance = 1.3
+    while True:
+        inner_ring = shrink_polygon(rings[-1], distance)
+        if find_distance(furthest_from_centroid(rings[-1]), find_centroid(rings[-1])) > distance / 2:
+            rings.append(inner_ring)
+        else:
+            break
     return rings
 
 # given x, y, z, and w values from a quaternion, convert to euler angles
