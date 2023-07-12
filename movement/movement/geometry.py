@@ -44,6 +44,16 @@ def shrink_polygon(vertices, distance):
         point[1] += centroid[1]
     return vertices_copy
 
+# Given an unmodified deque of rings, modify their start and end points to promote smooth transitions
+def add_transitions(rings):
+    # TODO: Modify so that as the rings get smaller, rearrange more points
+    total_points_moved = 0
+    for points in rings:
+        #print(f"Rearranging {total_points_moved} points...")
+        for i in range(total_points_moved):
+            points.append(points.popleft())
+        total_points_moved += 1
+
 # Given a deque of points representing a polygon, find the point that is closest to the polygon's centroid
 def furthest_from_centroid(polygon):
     centroid = find_centroid(polygon)
@@ -64,6 +74,7 @@ def get_rings(polygon, fov, height):
             rings.append(inner_ring)
         else:
             break
+    add_transitions(rings)
     return rings
 
 # given x, y, z, and w values from a quaternion, convert to euler angles
