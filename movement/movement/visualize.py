@@ -20,7 +20,7 @@ def plot_points(polygon_list):
         merged += d
     x_coords = [point[0] for point in merged]
     y_coords = [point[1] for point in merged]
-    plt.plot(x_coords, y_coords)
+    plt.plot(x_coords, y_coords, color = 'black')
     plt.xlim(5, 35)
     plt.ylim(10, 40)
     #plt.xlim(-35, 35)
@@ -34,7 +34,10 @@ def main():
     with open("sim_map.pickle", "rb") as file:
         boundary = pickle.load(file)
     #boundary = deque([[0,0],[5,5],[10,0],[10,30],[5,25],[0,0]])
+    #boundary.append(boundary[0])
     rings = geometry.get_rings(boundary, 90, 5)
+    #rings[1].append(rings[1][0])
+    #rings[2].append(rings[2][0])
     plot_points(rings)
 
 if __name__ == "__main__":

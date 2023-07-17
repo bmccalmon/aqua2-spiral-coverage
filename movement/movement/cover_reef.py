@@ -85,7 +85,7 @@ def follow_boundary(node):
 
         # plug into command
         auto_msg.target_yaw = new_yaw
-        auto_msg.target_pitch = -0.4
+        auto_msg.target_pitch = -0.3 # -0.5
         auto_msg.surge = surge
 
         store_points()
@@ -109,8 +109,9 @@ def spiral_inside(node):
     with open("sim_map.pickle", "rb") as file:
         boundary = pickle.load(file)
     # Generate a list of rings to follow
-    rings = geometry.get_rings(boundary)
-    visualize.plot_points(rings)
+    rings = geometry.get_rings(boundary, 90, 5)
+    rings.popleft() # remove outer ring since we already traversed it
+    #visualize.plot_points(rings)
     node = node
     while len(rings) > 0:
         while len(rings[0]) > 0:
@@ -118,9 +119,9 @@ def spiral_inside(node):
             swim_to.go_to_pos(node, target[0], target[1])
             node.destroy_node()
             node = rclpy.create_node("cover_reef")
-        print(f"Finished ring")
+        node.get_logger().info(f"Finished ring. {len(rings)} left.")
         rings.popleft()
-    print("Finished spiraling")
+    node.get_logger().info("Finished spiraling")
 
 def main():
     rclpy.init()
@@ -130,7 +131,7 @@ def main():
     checklist(node)
 
     node.get_logger().info("Following boundary...")
-    #boundary_points = follow_boundary(node)
+    boundary_points = follow_boundary(node)
 
     # Restart node
     node.destroy_node()

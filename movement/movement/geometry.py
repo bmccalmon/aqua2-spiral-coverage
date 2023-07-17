@@ -67,7 +67,7 @@ def furthest_from_centroid(polygon):
 def get_rings(polygon, fov, height):
     rings = deque()
     rings.append(polygon)
-    distance = 1.3
+    distance = 4 # hard-coded width
     while True:
         inner_ring = shrink_polygon(rings[-1], distance)
         if find_distance(furthest_from_centroid(rings[-1]), find_centroid(rings[-1])) > distance / 2:

@@ -62,7 +62,7 @@ def calibrate(node):
                 node.get_logger().warning("Taking longer than usual... Please check robot.")
                 timer = 0
                 calibrate()
-        node.get_logger().info("Calibration completed in " + str(v_timer) + " seconds.")
+        node.get_logger().info("Calibration completed in " + str(round(v_timer, 1)) + " seconds.")
 
 # Checks if already in swim mode and, if not, set to swim mode
 def set_swim(node):
@@ -126,7 +126,7 @@ def main():
     node = rclpy.create_node("stabilize")
     
     # startup Aqua2
-    node.get_logger().info("STARTING CHECKLIST")
+    node.get_logger().info("Starting checklist...")
     checklist(node)
     
     # stabalize Aqua2
