@@ -4,6 +4,7 @@ import stabilize
 import geometry
 import swim_to
 import visualize
+import save_image
 
 import rclpy
 from movement_interfaces.msg import Deviation
@@ -109,8 +110,8 @@ def spiral_inside(node):
     with open("sim_map.pickle", "rb") as file:
         boundary = pickle.load(file)
     # Generate a list of rings to follow
-    rings = geometry.get_rings(boundary, 90, 5)
-    rings.popleft() # remove outer ring since we already traversed it
+    rings = geometry.get_rings(boundary, 64, 7)
+    #rings.popleft() # remove outer ring since we already traversed it
     #visualize.plot_points(rings)
     node = node
     while len(rings) > 0:
@@ -131,7 +132,7 @@ def main():
     checklist(node)
 
     node.get_logger().info("Following boundary...")
-    boundary_points = follow_boundary(node)
+    #boundary_points = follow_boundary(node)
 
     # Restart node
     node.destroy_node()

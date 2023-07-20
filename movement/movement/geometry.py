@@ -46,10 +46,9 @@ def shrink_polygon(vertices, distance):
 
 # Given an unmodified deque of rings, modify their start and end points to promote smooth transitions
 def add_transitions(rings):
-    # TODO: Modify so that as the rings get smaller, rearrange more points
+    # TODO: Even smoother transitions
     total_points_moved = 0
     for points in rings:
-        #print(f"Rearranging {total_points_moved} points...")
         for i in range(total_points_moved):
             points.append(points.popleft())
         total_points_moved += 1
@@ -63,11 +62,11 @@ def furthest_from_centroid(polygon):
             furthest_point = point
     return furthest_point
 
-# Given a polygon, return a deque of smaller polygons that ensures complete coverage of the original polygon
+# Given a polygon, fov, and height above the terrain (for the camera width) return a deque of smaller polygons that ensures complete coverage of the original polygon
 def get_rings(polygon, fov, height):
     rings = deque()
     rings.append(polygon)
-    distance = 4 # hard-coded width
+    distance = height * (math.sin(fov) / 2)
     while True:
         inner_ring = shrink_polygon(rings[-1], distance)
         if find_distance(furthest_from_centroid(rings[-1]), find_centroid(rings[-1])) > distance / 2:
