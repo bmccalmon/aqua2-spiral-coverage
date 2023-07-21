@@ -94,7 +94,7 @@ def follow_boundary(node):
         #print(f"Surge: {surge: <25} x deviation: {x_deviation: <25} y deviation: {y_deviation: <25} Yaw: {yaw}")
         publisher.publish(auto_msg)
 
-    subscriber_deviation = node.create_subscription(Deviation, "boundary_info", deviation_callback, 10)
+    subscriber_deviation = node.create_subscription(Deviation, "boundary_info", deviation_callback, 1)
     subscriber_pose = node.create_subscription(Odometry, "/aqua/simulator/pose", main_callback, 10)
     #subscriber_pose = node.create_subscription(PoseWithCovarianceStamped, "/aqua/dvl_pose_estimate", main_callback, 10)
 
@@ -111,7 +111,7 @@ def spiral_inside(node):
         boundary = pickle.load(file)
     # Generate a list of rings to follow
     rings = geometry.get_rings(boundary, 64, 7)
-    #rings.popleft() # remove outer ring since we already traversed it
+    rings.popleft() # remove outer ring since we already traversed it
     #visualize.plot_points(rings)
     node = node
     while len(rings) > 0:
@@ -132,7 +132,7 @@ def main():
     checklist(node)
 
     node.get_logger().info("Following boundary...")
-    #boundary_points = follow_boundary(node)
+    boundary_points = follow_boundary(node)
 
     # Restart node
     node.destroy_node()

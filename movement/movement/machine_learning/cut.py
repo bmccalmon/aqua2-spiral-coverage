@@ -2,11 +2,11 @@
 import cv2
 import os
 
-sand_path = "uncropped/sand"
-rock_path = "uncropped/rock"
+sand_path = "uncropped/test/sand"
+rock_path = "uncropped/test/rock"
 
-save_sand = "train/sand"
-save_rock = "train/rock"
+save_sand = "test/sand"
+save_rock = "test/rock"
 
 chunk_n = 0
 

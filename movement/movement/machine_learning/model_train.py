@@ -6,10 +6,61 @@ from keras.layers import Dense, Conv2D, Flatten
 from keras.models import load_model
 import numpy as np
 import cv2
+import os
 
-# Return training data
+def count_files(path):
+    print(f"Counting the number of files in the path '{path}'...")
+    count = 0
+    fd = os.listdir(path)
+    for i in fd:
+        ip = os.path.join(path, i)
+        if os.path.isfile(ip):
+            count += 1
+    return count 
+
+# Return training and test data
 def load_data():
-    pass
+    x_train = [] # shape (x, 20, 20, 3)
+    y_train = [] # shape (x,)
+
+    x_test = []
+    y_test = []
+
+    # sand
+    sand_files_n = count_files("train/sand")
+    for i in range(sand_files_n):
+        # train
+        img = cv2.imread(f"train/sand/{str(i+1)}.png")
+        x_train.append(img)
+        y_train.append(0)
+    sand_files_n = count_files("test/sand")
+    for i in range(sand_files_n):
+        # test
+        img = cv2.imread(f"test/sand/{str(i+1)}.png")
+        x_test.append(img)
+        y_test.append(0)
+    
+    # rock
+    rock_files_n = count_files("train/rock")
+    for i in range(rock_files_n):
+        # train
+        img = cv2.imread(f"train/rock/{str(i+1)}.png")
+        x_train.append(img)
+        y_train.append(1)
+    rock_files_n = count_files("test/rock")
+    for i in range(rock_files_n):
+        # test
+        img = cv2.imread(f"test/rock/{str(i+1)}.png")
+        x_test.append(img)
+        y_test.append(1)
+
+    x_train = np.array(x_train)
+    y_train = np.array(y_train)
+
+    x_test = np.array(x_test)
+    y_test = np.array(y_test)
+    
+    return (x_train, y_train), (x_test, y_test)
 
 def main():
     (x_train, y_train), (x_test, y_test) = load_data()
@@ -20,14 +71,14 @@ def main():
 
     model = Sequential()
 
-    model.add(Conv2D(64, kernel_size=3, activation="relu", input_shape=(28,28,3)))
+    model.add(Conv2D(64, kernel_size=3, activation="relu", input_shape=(20,20,3)))
     model.add(Conv2D(32, kernel_size=3, activation="relu"))
     model.add(Flatten())
-    model.add(Dense(10, activation="softmax"))
+    model.add(Dense(2, activation="softmax"))
 
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
 
-    model.fit(x_train, y_train, validation_data = (x_test, y_test), epochs = 3)
+    model.fit(x_train, y_train, validation_data = (x_test, y_test), epochs = 30)
 
     model.save("reef_cnn.h5")
 
