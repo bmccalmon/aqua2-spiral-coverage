@@ -13,6 +13,76 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import CompressedImage
 from movement_interfaces.msg import Deviation
 
+# Given a contour, return its x,y centroid
+def find_contour_centroid(contour):
+    # contour[pixel][0][x/y]
+    sum_x = sum_y = 0
+    layer_size = len(contour)
+    i = 0
+    while i < layer_size:
+        sum_x = sum_x + contour[i][0][0]
+        sum_y = sum_y + contour[i][0][1]
+        i += 1
+    centroid_x = sum_x / layer_size
+    centroid_y = sum_y / layer_size
+    return centroid_x, centroid_y
+
+# Given a grayscale binary image, return the x,y deviation of the boundary line's centroid from the center of the image
+def find_deviation(img, show_pictures):
+    # take the top half of the image
+    h, w = img.shape[:2]
+    ts = 0
+    te = h // 2
+    img = img[ts:te, :]
+    
+    t_lower = 100
+    t_upper = 150
+
+    edge = cv2.Canny(img, t_lower, t_upper)
+
+    contours, _ = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    if show_pictures:
+        manual_canvas = np.zeros_like(img)
+
+    # find the largest contour
+    largest_contour = contours[0]
+    for contour in contours:
+        if len(contour) > len(largest_contour):
+            largest_contour = contour
+    contour = largest_contour
+
+    # calculate the line's centroid
+    centroid_x, centroid_y = find_contour_centroid(contour)
+
+    if show_pictures:
+        i = 0
+        while i < len(contour):
+            manual_canvas[contour[i][0][1]][contour[i][0][0]] = (255, 255, 255)
+            i += 1
+        manual_canvas[int(centroid_y)][int(centroid_x)] = (0, 0, 255)
+
+    # get center of image
+    h, w, _ = img.shape
+    center_x = w / 2
+    center_y = h / 2
+    if show_pictures:
+        manual_canvas[int(center_y)][int(center_x)] = (0, 255, 0)
+
+    # find deviation
+    deviation_x = centroid_x - center_x
+    deviation_y = centroid_y - center_y
+
+    if show_pictures:
+        print("Deviation x: " + str(deviation_x) + ", y: " + str(deviation_y))
+        cv2.imshow("Original", img)
+        cv2.imshow("Edges", edge)
+        cv2.imshow("Biggest Line", manual_canvas)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    
+    return deviation_x, deviation_y
+
 # Given an image, return a numpy array of smaller images with dimensions chunk_size
 def load_chunks(image, chunk_size):
     height, width, _ = image.shape
@@ -63,8 +133,8 @@ def fill_chunks(chunk_info, img, chunk_size):
 
     return b_img
 
-# Given a cv2 image, return the x,y deviation of the boundary line's centroid from the center of the image
-def find_deviation(img, show_pictures, model):
+# Given a cv2 image, segment the image into sand and reef
+def segment_image(img, show_pictures, model):
     # slice the image
     chunk_size = 20
     chunks = load_chunks(img, chunk_size)
@@ -79,68 +149,7 @@ def find_deviation(img, show_pictures, model):
     bw_img = fill_chunks(predictions, img, 20)
 
     # testing contour detection
-    return et_boundary.find_deviation(bw_img, show_pictures)
-
-    # take top half of the image
-    h, w = bw_img.shape[:2]
-    ts = 0
-    te = h // 2
-    bw_img = bw_img[ts:te, :]
-    bw_img = cv2.cvtColor(bw_img, cv2.COLOR_BGR2GRAY)
-    h, w = bw_img.shape[:2]
-    
-    # find the boundary points
-    boundary_points = []
-    # start from right, find where they meet
-    for hi in range(h):
-        wi = w - 1
-        if bw_img[hi][wi] == 255:
-            continue
-        while wi >= 0:
-            if bw_img[hi][wi] == 255:
-                # sometimes there are chunk errors, check for that
-                tw = wi - chunk_size - 1
-                if bw_img[hi][tw] == 255:
-                    boundary_points.append((wi, hi))
-            wi -= 1
-    # start from top, find where they meet
-    # find left-most x value
-    left_most = w
-    for x,_ in boundary_points:
-        if x < left_most:
-            left_most = x
-    wi = left_most
-    while wi < w:
-        if bw_img[0][wi] == 0:
-            wi += 1
-            continue
-        for hi in range(h):
-            if bw_img[hi][wi] == 0:
-                #th = hi + chunk_size + 1
-                #if bw_img[th][wi] == 0:
-                boundary_points.append((wi, hi))
-                break
-        wi += 1
-
-    # find the centroid
-    centroid = geometry.find_centroid(boundary_points)
-   
-    # find the deviation from the center
-    center_x = w / 2
-    center_y = h / 2
-
-    deviation_x = centroid[0] - center_x
-    deviation_y = centroid[1] - center_y
-
-    if show_pictures:
-        bw_img = cv2.cvtColor(bw_img, cv2.COLOR_GRAY2RGB)
-        for x,y in boundary_points:
-            bw_img[y][x] = (0, 0, 255)
-        cv2.imshow("bw", bw_img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-    return deviation_x, deviation_y
+    return bw_img
 
 def main():
     # load the ML model
@@ -148,7 +157,8 @@ def main():
 
     if len(sys.argv) > 1:
         img = cv2.imread(sys.argv[1])
-        x_deviation, y_deviation = find_deviation(img, True, model)
+        img = segment_image(img, False, model)
+        x_deviation, y_deviation = find_deviation(img, True)
         return
 
     rclpy.init()
@@ -159,7 +169,10 @@ def main():
     def callback(msg):
         nonlocal bridge, publisher
         cv_image = bridge.compressed_imgmsg_to_cv2(msg, desired_encoding="passthrough")
-        x_deviation, y_deviation = find_deviation(cv_image, False, model)
+        # segment image into sand and reef
+        cv_image = segment_image(cv_image, False, model)
+        # find the boundary using edge and contour detection
+        x_deviation, y_deviation = find_deviation(cv_image, False)
         msg = Deviation()
         msg.x = x_deviation
         msg.y = y_deviation

@@ -33,8 +33,6 @@ def follow_boundary(node):
     lap_complete = False
     def store_points():
         nonlocal boundary_points, x_pos, y_pos, halfway, lap_complete
-        #print(f"x: {x_pos: <25} y: {y_pos: <25}")
-        #print(boundary_points)
         point = [round(x_pos, 2), round(y_pos, 2)]
         # append coordinate point to the deque
         if len(boundary_points) == 0:
@@ -48,8 +46,6 @@ def follow_boundary(node):
         if halfway == True and x_pos > boundary_points[0][0]:
             # circle complete
             lap_complete = True
-        #print(f"Comparing {boundary_points[-1]} to {point}")
-        #print(f"Number of points: {len(boundary_points)}")
 
     def deviation_callback(msg):
         nonlocal x_deviation, y_deviation
@@ -112,7 +108,7 @@ def spiral_inside(node):
     # Generate a list of rings to follow
     rings = geometry.get_rings(boundary, 64, 7)
     rings.popleft() # remove outer ring since we already traversed it
-    #visualize.plot_points(rings)
+    visualize.plot_points(rings)
     node = node
     while len(rings) > 0:
         while len(rings[0]) > 0:
