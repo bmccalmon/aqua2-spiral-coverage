@@ -17,31 +17,36 @@ def find_distance(a, b):
 
 # Given a deque of vertices and a distance, return a new deque with a decreased radius
 # Example usage: shrink_polygon(boundary_points, 5)
+"""
+There are two ways to go about solving this problem. The first, as is implemented below, is to calculate the scale factor based on the point that is furthest from the centroid.
+The second is to calculate a different scale factor for each point, based on their own distance from the centroid. The prior creates a much smoother polygon but tends to create
+more overlap at some places. The latter ensures each point is the same distance from their counterparts throughout the polygon.
+"""
 def shrink_polygon(vertices, distance):
-    # Deep copy deque vertices
     vertices_copy = deque()
+    centroid = find_centroid(vertices)
+    # find the point furthest from the centroid
+    furthest_point = vertices[0]
     for point in vertices:
-        vertices_copy.append([point[0], point[1]])
-    # Calculate the centroid of the polygon
-    centroid = find_centroid(vertices_copy)
-    # Shift every point by the centroid, scale, then shift back
-    for point in vertices_copy:
-        # Calculate the approximate radius at the current point and, using that, estimate the scale factor needed to satisfy the wanted distance
-        radius = find_distance(centroid, point)
-        if radius == 0:
-            radius = 0.001
-        scale = 1 - (distance / radius)
-        if scale < 0:
-            scale = 0
+        if find_distance(point, centroid) > find_distance(furthest_point, centroid):
+            furthest_point = point
+    # use that to determine the scale factor
+    radius = find_distance(furthest_point, centroid)
+    scale = 1 - (distance / radius)
+    # shrink every point
+    for point in vertices:
+        new_point = [point[0], point[1]]
         # Shift by centroid
-        point[0] -= centroid[0]
-        point[1] -= centroid[1]
+        new_point[0] -= centroid[0]
+        new_point[1] -= centroid[1]
         # Scale
-        point[0] *= scale
-        point[1] *= scale
+        new_point[0] *= scale
+        new_point[1] *= scale
         # Shift back
-        point[0] += centroid[0]
-        point[1] += centroid[1]
+        new_point[0] += centroid[0]
+        new_point[1] += centroid[1]
+        # Append point
+        vertices_copy.append(new_point)
     return vertices_copy
 
 # Given an unmodified deque of rings, modify their start and end points to promote smooth transitions

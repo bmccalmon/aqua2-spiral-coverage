@@ -82,7 +82,7 @@ def follow_boundary(node):
 
         # plug into command
         auto_msg.target_yaw = new_yaw
-        auto_msg.target_pitch = -0.3 # -0.5
+        auto_msg.target_pitch = -0.5 # -0.5
         auto_msg.surge = surge
 
         store_points()
@@ -106,9 +106,9 @@ def spiral_inside(node):
     with open("sim_map.pickle", "rb") as file:
         boundary = pickle.load(file)
     # Generate a list of rings to follow
-    rings = geometry.get_rings(boundary, 64, 7)
+    rings = geometry.get_rings(boundary, 64, 8)
     rings.popleft() # remove outer ring since we already traversed it
-    visualize.plot_points(rings)
+    #visualize.plot_points(rings)
     node = node
     while len(rings) > 0:
         while len(rings[0]) > 0:

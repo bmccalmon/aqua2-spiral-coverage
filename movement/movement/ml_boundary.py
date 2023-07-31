@@ -5,9 +5,10 @@ import cv2
 import numpy as np
 import sys
 from keras.models import load_model
+import time
+import datetime
 
 import geometry
-import et_boundary
 
 from cv_bridge import CvBridge
 from sensor_msgs.msg import CompressedImage
@@ -28,12 +29,13 @@ def find_contour_centroid(contour):
     return centroid_x, centroid_y
 
 # Given a grayscale binary image, return the x,y deviation of the boundary line's centroid from the center of the image
-def find_deviation(img, show_pictures):
+def find_deviation(img, show_pictures = False):
     # take the top half of the image
-    h, w = img.shape[:2]
-    ts = 0
-    te = h // 2
-    img = img[ts:te, :]
+    if not show_pictures:
+        h, w = img.shape[:2]
+        ts = 0
+        te = h // 2
+        img = img[ts:te, :]
     
     t_lower = 100
     t_upper = 150
@@ -46,6 +48,8 @@ def find_deviation(img, show_pictures):
         manual_canvas = np.zeros_like(img)
 
     # find the largest contour
+    if len(contours) == 0:
+        return 0.0, 0.0
     largest_contour = contours[0]
     for contour in contours:
         if len(contour) > len(largest_contour):
@@ -58,16 +62,17 @@ def find_deviation(img, show_pictures):
     if show_pictures:
         i = 0
         while i < len(contour):
-            manual_canvas[contour[i][0][1]][contour[i][0][0]] = (255, 255, 255)
+            #manual_canvas[contour[i][0][1]][contour[i][0][0]] = (0, 0, 255) # (255, 255, 255)
+            cv2.line(manual_canvas, contour[i][0], contour[i][0], (0, 0, 255), 3)
             i += 1
-        manual_canvas[int(centroid_y)][int(centroid_x)] = (0, 0, 255)
+        #manual_canvas[int(centroid_y)][int(centroid_x)] = (0, 0, 255)
 
     # get center of image
     h, w, _ = img.shape
     center_x = w / 2
     center_y = h / 2
-    if show_pictures:
-        manual_canvas[int(center_y)][int(center_x)] = (0, 255, 0)
+    #if show_pictures:
+        #manual_canvas[int(center_y)][int(center_x)] = (0, 255, 0)
 
     # find deviation
     deviation_x = centroid_x - center_x
@@ -78,9 +83,10 @@ def find_deviation(img, show_pictures):
         cv2.imshow("Original", img)
         cv2.imshow("Edges", edge)
         cv2.imshow("Biggest Line", manual_canvas)
+        cv2.imwrite(f"debug/images/examples/{datetime.datetime.now()}.jpg", manual_canvas)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-    
+
     return deviation_x, deviation_y
 
 # Given an image, return a numpy array of smaller images with dimensions chunk_size
@@ -109,7 +115,7 @@ def load_chunks(image, chunk_size):
     return chunks
 
 # Given a placeholder image and binary info for each chunk, return a B/W image
-def fill_chunks(chunk_info, img, chunk_size):
+def fill_chunks(chunk_info, img, chunk_size, show_pictures = False):
     b_img = np.zeros_like(img)
     h, w = b_img.shape[:2]
     
@@ -126,15 +132,19 @@ def fill_chunks(chunk_info, img, chunk_size):
 
             # fill in with color; sand=white, rock=black
             color_to_fill = 0
+            if show_pictures:
+                color_to_fill = (0, 128, 0)
             if np.argmax(chunk_info[ci]) == 0:
                 color_to_fill = 255
+                if show_pictures:
+                    color_to_fill = (128, 0, 0) # (205, 250, 255)
             b_img[y_start:y_end, x_start:x_end] = color_to_fill
             ci += 1
 
     return b_img
 
 # Given a cv2 image, segment the image into sand and reef
-def segment_image(img, show_pictures, model):
+def segment_image(img, model, show_pictures = False):
     # slice the image
     chunk_size = 20
     chunks = load_chunks(img, chunk_size)
@@ -146,7 +156,13 @@ def segment_image(img, show_pictures, model):
     predictions = model.predict(chunks)
 
     # construct a new image
-    bw_img = fill_chunks(predictions, img, 20)
+    bw_img = fill_chunks(predictions, img, 20, show_pictures)
+
+    if show_pictures:
+        cv2.addWeighted(img, 1, bw_img, 0.5, 0.7, bw_img)
+        cv2.imshow("Model results", bw_img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     # testing contour detection
     return bw_img
@@ -157,8 +173,11 @@ def main():
 
     if len(sys.argv) > 1:
         img = cv2.imread(sys.argv[1])
-        img = segment_image(img, False, model)
+        img = segment_image(img, model, False)
         x_deviation, y_deviation = find_deviation(img, True)
+        # save img
+        if len(sys.argv) > 2 and sys.argv[2] == "-s":
+            cv2.imwrite(f"debug/images/examples/{datetime.datetime.now()}.jpg", img)
         return
 
     rclpy.init()
@@ -170,9 +189,9 @@ def main():
         nonlocal bridge, publisher
         cv_image = bridge.compressed_imgmsg_to_cv2(msg, desired_encoding="passthrough")
         # segment image into sand and reef
-        cv_image = segment_image(cv_image, False, model)
+        cv_image = segment_image(cv_image, model)
         # find the boundary using edge and contour detection
-        x_deviation, y_deviation = find_deviation(cv_image, False)
+        x_deviation, y_deviation = find_deviation(cv_image)
         msg = Deviation()
         msg.x = x_deviation
         msg.y = y_deviation

@@ -25,7 +25,7 @@ def main():
         nonlocal cooldown
         bridge = CvBridge()
         cv_image = bridge.compressed_imgmsg_to_cv2(msg, desired_encoding="passthrough")
-        cv.imwrite("debug/images/" + str(datetime.datetime.now()) + ".jpg", cv_image)
+        cv.imwrite("debug/images/result/" + str(datetime.datetime.now()) + ".jpg", cv_image)
         time.sleep(cooldown)
 
     subscriber = node.create_subscription(CompressedImage, "/aqua/camera/back/image_raw/compressed", callback, 1)
