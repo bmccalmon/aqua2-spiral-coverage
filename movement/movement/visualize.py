@@ -31,10 +31,10 @@ def plot_points(polygon_list):
     plt.show()
 
 def main():
-    with open("sim_map2.pickle", "rb") as file:
+    with open("sim_map.pickle", "rb") as file:
         boundary = pickle.load(file)
     #boundary = deque([[0,0],[5,-5],[10,0],[10,30],[5,25],[0,0]])
-    boundary.append(boundary[0])
+    #boundary.append(boundary[0])
     #boundary = deque([[2,-2],[-2,-2],[-2,2],[2,2],[2,-1.5]])
     rings = geometry.get_rings(boundary, 64, 8)
     #rings[1].append(rings[1][0])

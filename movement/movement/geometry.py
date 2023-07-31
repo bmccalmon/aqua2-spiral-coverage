@@ -15,6 +15,15 @@ def find_centroid(points):
 def find_distance(a, b):
     return math.sqrt(((a[0] - b[0]) ** 2) + ((a[1] - b[1]) ** 2))
 
+# Given a deque of points representing a polygon, find the point that is the furthest from the polygon's centroid
+def furthest_from_centroid(polygon):
+    centroid = find_centroid(polygon)
+    furthest_point = polygon[0]
+    for point in polygon:
+        if find_distance(point, centroid) > find_distance(furthest_point, centroid):
+            furthest_point = point
+    return furthest_point
+
 # Given a deque of vertices and a distance, return a new deque with a decreased radius
 # Example usage: shrink_polygon(boundary_points, 5)
 """
@@ -26,10 +35,7 @@ def shrink_polygon(vertices, distance):
     vertices_copy = deque()
     centroid = find_centroid(vertices)
     # find the point furthest from the centroid
-    furthest_point = vertices[0]
-    for point in vertices:
-        if find_distance(point, centroid) > find_distance(furthest_point, centroid):
-            furthest_point = point
+    furthest_point = furthest_from_centroid(vertices)
     # use that to determine the scale factor
     radius = find_distance(furthest_point, centroid)
     scale = 1 - (distance / radius)
@@ -58,15 +64,6 @@ def add_transitions(rings):
             points.append(points.popleft())
         total_points_moved += 1
 
-# Given a deque of points representing a polygon, find the point that is closest to the polygon's centroid
-def furthest_from_centroid(polygon):
-    centroid = find_centroid(polygon)
-    furthest_point = polygon[0]
-    for point in polygon:
-        if find_distance(point, centroid) > find_distance(furthest_point, centroid):
-            furthest_point = point
-    return furthest_point
-
 # Given a polygon, fov, and height above the terrain (for the camera width) return a deque of smaller polygons that ensures complete coverage of the original polygon
 def get_rings(polygon, fov, height):
     rings = deque()
@@ -81,14 +78,8 @@ def get_rings(polygon, fov, height):
     add_transitions(rings)
     return rings
 
-# given x, y, z, and w values from a quaternion, convert to euler angles
+# Given x, y, z, and w values from a quaternion, convert to euler angles
 def euler_from_quaternion(x, y, z, w):
-    """
-    Convert a quaternion into euler angles (roll, pitch, yaw)
-    roll is rotation around x in radians (counterclockwise)
-    pitch is rotation around y in radians (counterclockwise)
-    yaw is rotation around z in radians (counterclockwise)
-    """
     t0 = +2.0 * (w * x + y * z)
     t1 = +1.0 - 2.0 * (x * x + y * y)
     roll_x = math.atan2(t0, t1)
@@ -104,11 +95,11 @@ def euler_from_quaternion(x, y, z, w):
 
     return roll_x, pitch_y, yaw_z # in radians
 
-# given a radian value r, convert to degrees
+# Given a radian value r, convert to degrees
 def degrees_from_radians(r):
     return r * (180/math.pi)
 
-# given a current angle c and an addend a (in degrees), return a new angle in degrees
+# Given a current angle c and an addend a (in degrees), return a new angle in degrees
 def get_target_angle(c, a):
     sum = c + a
     if sum >= 180:
