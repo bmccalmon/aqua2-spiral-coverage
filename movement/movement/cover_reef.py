@@ -106,7 +106,7 @@ def spiral_inside(node):
     with open("sim_map.pickle", "rb") as file:
         boundary = pickle.load(file)
     # Generate a list of rings to follow
-    rings = geometry.get_rings(boundary, 64, 8)
+    rings = geometry.get_rings(boundary, 64, 9)
     rings.popleft() # remove outer ring since we already traversed it
     #visualize.plot_points(rings)
     node = node

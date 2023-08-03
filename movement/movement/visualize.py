@@ -36,7 +36,7 @@ def main():
     #boundary = deque([[0,0],[5,-5],[10,0],[10,30],[5,25],[0,0]])
     #boundary.append(boundary[0])
     #boundary = deque([[2,-2],[-2,-2],[-2,2],[2,2],[2,-1.5]])
-    rings = geometry.get_rings(boundary, 64, 8)
+    rings = geometry.get_rings(boundary, 64, 9)
     #rings[1].append(rings[1][0])
     #rings[2].append(rings[2][0])
     #rings[3].append(rings[3][0])
