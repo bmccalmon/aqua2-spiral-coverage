@@ -2,11 +2,13 @@
 import cv2
 import os
 
-sand_path = "uncropped/test/sand"
-rock_path = "uncropped/test/rock"
+sand_path = "real_world/uncropped/train/sand"
+rock_path = "real_world/uncropped/train/rock"
 
-save_sand = "test/sand"
-save_rock = "test/rock"
+save_sand = "real_world/train/sand"
+save_rock = "real_world/train/rock"
+
+file_extension = "png"
 
 chunk_n = 0
 
@@ -46,21 +48,21 @@ def save_chunks(image, chunk_size, output_folder):
             cv2.imwrite(output_path, sub_image)
 
 def main():
-    global sand_path, rock_path, save_sand, save_rock, chunk_n
+    global sand_path, rock_path, file_extension, save_sand, save_rock, chunk_n
     sand_img_count = count_files(sand_path)
     rock_img_count = count_files(rock_path)
 
     # sand
     for image_i in range(sand_img_count):
-        print(f"Saving chunks from {sand_path}/{image_i+1}.jpg to {save_sand}...")
-        img = cv2.imread(f"{sand_path}/{image_i+1}.jpg")
+        print(f"Saving chunks from {sand_path}/{image_i+1}.{file_extension} to {save_sand}...")
+        img = cv2.imread(f"{sand_path}/{image_i+1}.{file_extension}")
         save_chunks(img, 20, save_sand)
     chunk_n = 0
 
     # rock
     for image_i in range(rock_img_count):
-        print(f"Saving chunks from {rock_path}/{image_i+1}.jpg to {save_rock}...")
-        img = cv2.imread(f"{rock_path}/{image_i+1}.jpg")
+        print(f"Saving chunks from {rock_path}/{image_i+1}.{file_extension} to {save_rock}...")
+        img = cv2.imread(f"{rock_path}/{image_i+1}.{file_extension}")
         save_chunks(img, 20, save_rock)
 
 if __name__ == "__main__":

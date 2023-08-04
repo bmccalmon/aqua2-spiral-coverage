@@ -14,7 +14,7 @@ def main():
     x_test = (x_test / 255)
     y_test = to_categorical(y_test, num_classes=2)
 
-    model = load_model("reef_cnn.h5")
+    model = load_model("real_cnn.h5")
     score = model.evaluate(x_test, y_test, verbose = 0)
     print(f"Accuracy: {score[1]}")
 

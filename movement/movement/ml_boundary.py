@@ -169,12 +169,12 @@ def segment_image(img, model, show_pictures = False):
 
 def main():
     # load the ML model
-    model = load_model("machine_learning/reef_cnn.h5")
+    model = load_model("machine_learning/real_cnn.h5")
 
     if len(sys.argv) > 1:
         img = cv2.imread(sys.argv[1])
-        img = segment_image(img, model, False)
-        x_deviation, y_deviation = find_deviation(img, True)
+        img = segment_image(img, model, True)
+        x_deviation, y_deviation = find_deviation(img, False)
         # save img
         if len(sys.argv) > 2 and sys.argv[2] == "-s":
             cv2.imwrite(f"debug/images/examples/{datetime.datetime.now()}.jpg", img)

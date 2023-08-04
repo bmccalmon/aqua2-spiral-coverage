@@ -27,30 +27,30 @@ def load_data():
     y_test = []
 
     # sand
-    sand_files_n = count_files("train/sand")
+    sand_files_n = count_files("real_world/train/sand")
     for i in range(sand_files_n):
         # train
-        img = cv2.imread(f"train/sand/{str(i+1)}.png")
+        img = cv2.imread(f"real_world/train/sand/{str(i+1)}.png")
         x_train.append(img)
         y_train.append(0)
-    sand_files_n = count_files("test/sand")
+    sand_files_n = count_files("real_world/test/sand")
     for i in range(sand_files_n):
         # test
-        img = cv2.imread(f"test/sand/{str(i+1)}.png")
+        img = cv2.imread(f"real_world/test/sand/{str(i+1)}.png")
         x_test.append(img)
         y_test.append(0)
     
     # rock
-    rock_files_n = count_files("train/rock")
+    rock_files_n = count_files("real_world/train/rock")
     for i in range(rock_files_n):
         # train
-        img = cv2.imread(f"train/rock/{str(i+1)}.png")
+        img = cv2.imread(f"real_world/train/rock/{str(i+1)}.png")
         x_train.append(img)
         y_train.append(1)
-    rock_files_n = count_files("test/rock")
+    rock_files_n = count_files("real_world/test/rock")
     for i in range(rock_files_n):
         # test
-        img = cv2.imread(f"test/rock/{str(i+1)}.png")
+        img = cv2.imread(f"real_world/test/rock/{str(i+1)}.png")
         x_test.append(img)
         y_test.append(1)
 
@@ -80,7 +80,7 @@ def main():
 
     model.fit(x_train, y_train, validation_data = (x_test, y_test), epochs = 30)
 
-    model.save("reef_cnn.h5")
+    model.save("real_cnn.h5")
 
 if __name__ == "__main__":
     main()
