@@ -1,3 +1,5 @@
+# Message to whoever looks at the code
+My scripts are located in movement/movement. I just ran the scripts directly (i.e. python3 cover_reef.py, etc). Two Keras models are located in movement/movement/machine_learning, one trained using simulator data (reef_cnn.h5) and the other using data from a gopro (real_cnn.h5). The scripts require a custom msg interface located in movement_interfaces/msg called Deviation.msg. It's been a while since writing the code, but I recall doing some funky stuff like restarting nodes in order to prevent bugs, so I apologize in advance if stuff like that causes any issues. I ran cover_reef.py and ml_boundary.py at the same time in different windows.
 
 # Documentation
 
@@ -12,4 +14,4 @@ Ben
 
 Unfortunately, especially recently, there is an epidemic of [mass coral bleaching](https://oceanservice.noaa.gov/facts/coral_bleach.html#:~:text=Warmer%20water%20temperatures%20can%20result,This%20is%20called%20coral%20bleaching.) amongst underwater ecosystems. This happens when the oceans increase in temperature because of climate change. Marine biologists have techniques to monitor these ecosystems and take steps necessary to preserve healthy coral.
 
-[not limited to coral bleaching, but predation too]
+To be continued...
